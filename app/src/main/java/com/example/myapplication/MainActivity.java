@@ -1,6 +1,5 @@
 package com.example.myapplication;
 
-import static com.android.volley.Request.Method.*;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -14,12 +13,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
-import com.android.volley.Request.Method;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -40,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> communeAdapter;
     JSONArray jsonArray;
     JSONObject obj;
+    String selectedState;
     //TextViews to display details
 
     @Override
@@ -55,43 +53,7 @@ public class MainActivity extends AppCompatActivity {
 // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = "https://gist.githubusercontent.com/ayoubbentameur/06e623397d2dd224c9add9cd92ad0ffd/raw/169975b451ce6f43a4e23190b01b866e0d6c5cb3/testJson.json";
-     /*  JsonArrayRequest jsonArrayRequest=new JsonArrayRequest(GET, url, null, new Response.Listener<JSONArray>() {
 
-           @Override
-           public void onResponse(JSONArray response) {
-
-                    for (int i = 0; i < response.length(); i++) {
-                        // Get the JSONObject at the current index
-                        JSONObject jsonObject = null;
-                        try {
-                            jsonObject = response.getJSONObject(i);
-                        } catch (JSONException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        // Get the value of the "name" key
-                        String name = null;
-                        try {
-                            name = jsonObject.getString("name");
-                        } catch (JSONException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        // Do something with the name value
-                        Log.d(TAG, "Name: " + name);
-                    }
-
-
-
-           }
-       }, new Response.ErrorListener() {
-           @Override
-           public void onErrorResponse(VolleyError error) {
-               Log.e(TAG, "Error: " + error.getMessage());
-
-           }
-       });
-        queue.add(jsonArrayRequest);*/
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
@@ -106,10 +68,10 @@ public class MainActivity extends AppCompatActivity {
 
                             for (int i = 0; i < jsonArrayFr.length(); i++) {
                                 obj = jsonArrayFr.getJSONObject(i);
+                                int id=obj.getInt("id");
                                 name = obj.getString("name");
-                                Log.d("JSON", "Name: " + name);
+                                Log.d("JSON", "Name:" + name);
                                 wilayaNames.add(name);
-
                             }
 
 
@@ -150,10 +112,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 // Handle the user's selection here
-                String selectedState = wilayaSpinner.getSelectedItem().toString();
+                 selectedState = wilayaSpinner.getSelectedItem().toString();
                 Toast.makeText(MainActivity.this, selectedState, Toast.LENGTH_SHORT).show();
+               // JSONArray family = (JSONArray) jsonObject.get("family");
 
-               JSONObject selectedStateObject = null;
+                JSONObject selectedStateObject = null;
                for (int k = 0; k < jsonArray.length(); k++) {
                     try {
                         JSONObject jsonObject = jsonArray.getJSONObject(k);
@@ -198,61 +161,46 @@ public class MainActivity extends AppCompatActivity {
                 // Do nothing
             }
         });
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                try {
+                    // Parse the JSON data and extract the required information
 
-        queue.add(stringRequest);
-    }
-}
 
-// Request a string response from the provided URL.
-        /*StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        textView.setText("Response is: " + response);
+                    JSONArray jsonArray = response.getJSONObject(0).getJSONArray("fr");
+                    JSONObject jsonObject = null;
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        jsonObject = jsonArray.getJSONObject(i);
+                        if (jsonObject.getString("name").equals(selectedState)) {
+                            break;
+                        }
                     }
-                }, new Response.ErrorListener() {
+                    JSONArray communesArray = jsonObject.getJSONArray("communes");
+                    for (int j = 0; j < communesArray.length(); j++) {
+                        String commune = communesArray.getString(j).toString();
+                       // String result = response.toString();
+                        Log.d("Commune", commune);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                textView.setText("That didn't work!");
+                error.printStackTrace();
             }
         });
 
 // Add the request to the RequestQueue.
-        queue.add(stringRequest);*/
+        queue.add(request);
+
+        queue.add(stringRequest);
 
 
-       /* JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
 
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            // Parsing json object response
-                            // response will be a JSONObject instance
-                            String name = response.getString("name");
-                            int age = response.getInt("userId");
-                            JSONArray hobbies = response.getJSONArray("communes");
+    }
+}
 
-                            // Do something with the parsed data
-                            Log.d(TAG, "Name: " + name);
-                            Log.d(TAG, "Age: " + age);
-                            for (int i = 0; i < hobbies.length(); i++) {
-                                textView.setText(hobbies.getString(i));
-
-                                Log.d(TAG, "Hobby " + i + ": " + hobbies.getString(i));
-                            }
-                        } catch (JSONException e) {
-                            e.getMessage();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // Do something when error occurs
-                        Log.e(TAG, "Error: " + error.getMessage());
-                    }
-                });
-            queue.add(jsonObjectRequest);*/
 
